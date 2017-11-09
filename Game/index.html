@@ -1,0 +1,357 @@
+<html>
+
+
+<head>
+  <meta charset="UTF-8">
+  <title>#GameApp</title>
+  <script src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+  <script src='//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js'></script>
+  <script src='//ajax.googleapis.com/ajax/libs/angularjs/1.3.2/angular.min.js'></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+  <style>
+  html {
+	  box-sizing: border-box;
+  }
+  * {
+    box-sizing:inherit;
+  }
+  body {
+    background:#555555;
+    color:#ffa;
+  }
+  div {
+    border: 1px solid #ffa;
+    vertical-align: middle;
+    margin:0 auto;
+    text-align:center;
+  }
+  .modal-header,.modal-body {
+    background: #000;
+    border: 1px solid #ffa;
+    color: #fff;
+  }
+  .modal-dialog {
+    border: transparent;
+  }
+  .modal-footer {
+    text-align: center;
+    border: transparent;
+  }
+  .btn {
+    font-size: 36px;
+    font-weight: 800;
+  }
+  .container {
+    border: none;
+	  margin-top: 50px;
+    padding-top: 0;
+  	height: 500px;
+    
+  }
+  .square {
+    width:482px;
+    height:482px;
+    padding:0;
+    margin:0 auto;
+    background:#000;
+  }
+  .col-xs-4 {
+    margin:0px;
+	  height: 160px;
+    width:  160px;
+	  text-align: center;
+	  vertical-align: middle;
+    background-color:#000;
+    color:#fff;
+  }
+  #top-left {
+    border-left:none;
+    border-top:none;
+  }
+  #top-center {
+    border-left:none;
+    border-top:none;
+    border-right:none;
+  }
+  #top-right {
+    border-top:none;
+    border-right:none;
+  }
+  #middle-left {
+    border-top:none;
+    border-left:none;
+    border-bottom:none;
+  }
+  #middle-center {
+    border-left:none;
+    border-top:none;
+    border-bottom:none;
+    border-right:none;
+  }
+  #middle-right {
+    border-top:none;
+    border-right:none;
+    border-bottom:none;
+  }
+  #bottom-left {
+    border-left:none;
+    border-bottom:none;
+  }
+  #bottom-center {
+    border-left:none;
+    border-bottom:none;
+    border-right:none;
+  }
+  #bottom-right {
+    border-right:none;
+    border-bottom:none;
+  }
+  </style>
+</head>
+
+
+<body translate="no">
+  <div id="iconModal" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title">choose your object</h1>
+        </div>
+        <div class="modal-body">
+          <p id="question"></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal" id="leftButton">X</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal" id="rightButton">O</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+  <main ng-app="#GameApp" ng-controller="MainCtrl">
+    <div class="container">
+      <div class="square">
+        <button class="col-xs-4" id="top-left"     ng-click="update(0, 0)"><span>{{matrix[0][0]}}</span></button>
+        <button class="col-xs-4" id="top-center"   ng-click="update(0, 1)"><span>{{matrix[0][1]}}</span></button>
+        <button class="col-xs-4" id="top-right"    ng-click="update(0, 2)"><span>{{matrix[0][2]}}</span></button>
+        <button class="col-xs-4" id="middle-left"  ng-click="update(1, 0)"><span>{{matrix[1][0]}}</span></button>
+        <button class="col-xs-4" id="middle-center"ng-click="update(1, 1)"><span>{{matrix[1][1]}}</span></button>
+        <button class="col-xs-4" id="middle-right" ng-click="update(1, 2)"><span>{{matrix[1][2]}}</span></button>
+        <button class="col-xs-4" id="bottom-left"  ng-click="update(2, 0)"><span>{{matrix[2][0]}}</span></button>
+        <button class="col-xs-4" id="bottom-center"ng-click="update(2, 1)"><span>{{matrix[2][1]}}</span></button>
+        <button class="col-xs-4" id="bottom-right" ng-click="update(2, 2)"><span>{{matrix[2][2]}}</span></button>
+      </div>
+    </div>
+  </main>
+  <script>
+  var app = angular.module("#GameApp", []);
+  app.controller("MainCtrl", function($scope, $interval){
+    $scope.player = "x";
+    $scope.comp   = "";
+    $scope.matrix = [[" ", " ", " "],
+                     [" ", " ", " "],
+                     [" ", " ", " "]];
+    $scope.canWrite = [[true, true, true],
+                       [true, true, true],
+                       [true, true, true]];                 
+    $scope.isGameOver = false;
+    $scope.compWritten = false;
+    
+    function changeValue(newValue, rowi, colj) {
+      if ($scope.canWrite[rowi][colj] == true)
+        $scope.matrix[rowi][colj] = newValue;
+    }
+    
+    (function chooseXO(question) {
+      question = question || 'X XOR O?';
+
+      $('#iconModal').modal({
+        show: true,
+        backdrop: true,
+        keyboard: false
+      });
+
+      $('#question').html(question);
+      $('#leftButton').one('click', function () {
+        if (question === 'X XOR O?') {
+          $scope.player = 'X';
+          $scope.comp = $scope.player === 'X' ? 'O' : 'X';
+        }
+        $('#rightButton').off('click');
+        $('#iconModal').modal('hide');
+        compTurn();
+      });
+      $('#rightButton').one('click', function () {
+        $scope.player = 'O';
+        $scope.comp = $scope.player === 'X' ? 'O' : 'X';
+        $('#rightButton').off('click');
+        $('#iconModal').modal('hide');
+        compTurn();
+      });
+    })();
+     
+    $scope.update = function(i, j){
+      $interval(updateTimer(i, j), 1000);
+    }
+     
+    function updateTimer(i, j) {
+      changeValue($scope.player, i, j);
+      $scope.matrix[i][j] = $scope.player;
+      whetherGameOver($scope.player, gameOver);
+      if (!$scope.isGameOver)
+        compTurn();
+      $scope.compWritten = false;
+    }
+    var arr = [];
+    function compTurn() {
+      if ($scope.matrix[1][1] == $scope.player &&
+          !$scope.canWrite[1][1]) {
+        //中间填过了,且不是computer填的
+        if ($scope.matrix[0][0] == " " && $scope.canWrite[0][0]) {
+          //那就填第一个
+          changeValue($scope.comp, 0, 0);
+          $scope.canWrite[0][0] = false;
+          $scope.compWritten = true;
+        } else {
+          var b = testTwo($scope.comp);
+          if (b) {
+            $scope.matrix[b[0]][b[1]] = $scope.comp;
+          } else {
+            arr = testTwo($scope.player);
+            if (arr) {
+              $scope.matrix[arr[0]][arr[1]] = $scope.comp;
+            } else {
+              for(var i=0; i<=2; i++) {
+                for(var j=0; j<=2; j++) {
+                  if ($scope.matrix[i][j] == " ") {
+                    $scope.matrix[i][j] = $scope.comp;
+                    break;
+                  }
+                }
+              }  
+            }
+          }
+        }
+      } else {
+        if ($scope.canWrite[1][1] ){
+          $scope.matrix[1][1] = $scope.comp;
+          $scope.canWrite[1][1] = false;
+          $scope.compWritten = true;
+        } else {
+          //第二步
+          var b = testTwo($scope.comp);
+          if (b) {
+            $scope.matrix[b[0]][b[1]] = $scope.comp;
+          } else {
+            arr = testTwo($scope.player);
+            if (arr) {
+              $scope.matrix[arr[0]][arr[1]] = $scope.comp;
+            } else {
+              var flag = false;
+              for(var i=0; i<=2; i++) {
+                for(var j=0; j<=2; j++) {
+                  if ($scope.matrix[i][j] == " ") {
+                    $scope.matrix[i][j] = $scope.comp;
+                    flag = true;
+                    break;
+                  }
+                }
+                if(flag) break;
+              }  
+            }
+          }
+        }
+      }
+      whetherGameOver($scope.comp, gameOver); //填完后判断是否游戏结束
+    }
+    //TODO
+    function whetherGameOver(value, func) {
+      if ($scope.matrix[0][0] == value && 
+          $scope.matrix[0][1] == value &&
+          $scope.matrix[0][2] == value){
+        func();
+        return true;
+      }
+      if ($scope.matrix[1][0] == value && 
+          $scope.matrix[1][1] == value && 
+          $scope.matrix[1][2] == value){alert("sdfv");
+        func();
+        return true;
+      }
+      if ($scope.matrix[2][0] == value && 
+          $scope.matrix[2][1] == value && 
+          $scope.matrix[2][2] == value){
+        func();
+        return true;
+      }
+      if ($scope.matrix[0][0] == value &&  
+          $scope.matrix[1][0] == value && 
+          $scope.matrix[2][0] == value){
+        func();
+        return true;
+      }
+      if ($scope.matrix[0][1] == value && 
+          $scope.matrix[1][1] == value && 
+          $scope.matrix[2][1] == value){
+        func();
+        return true;
+      }
+      if ($scope.matrix[0][2] == value && 
+          $scope.matrix[1][2] == value && 
+          $scope.matrix[2][2] == value){
+        func();
+        return true;
+      }
+      if ($scope.matrix[0][0] == value && 
+          $scope.matrix[1][1] == value && 
+          $scope.matrix[2][2] == value){
+        func();
+        return true;
+      }
+      if ($scope.matrix[2][0] == value && 
+          $scope.matrix[1][1] == value && 
+          $scope.matrix[0][2] == value){
+        func();
+        return true;
+      }
+      return false;
+    }
+    
+    function tryToWriteAtAngle() {
+      for(var i=0; i<2; i++) {
+        for(var j=0; j<2; j++) {
+          
+        }
+      }
+    }
+  
+    function testTwo(value) {
+      var tempI, tempJ;
+      for(var i=0; i<=2; i++) {
+        for(var j=0; j<=2; j++) {
+          if ($scope.matrix[i][j] == " "){
+            $scope.matrix[i][j] = value;
+            if(whetherGameOver(value, function(){return true;})){
+              tempI = i;
+              tempJ = j;
+              $scope.matrix[i][j] = " ";
+              return [tempI, tempJ];
+            }
+            $scope.matrix[i][j] = " ";
+          }
+        }
+      }
+      return false;
+    }
+    
+    function gameOver() {
+      alert("GameOver!");
+    }
+  });
+  
+  </script>
+</body>
+
+
+
+
+</html>
