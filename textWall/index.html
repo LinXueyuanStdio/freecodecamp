@@ -1,0 +1,128 @@
+<style>
+.myCanvas{
+  margin:0;
+  padding:0;
+}
+send-and-clear{
+text-align: center;
+}
+</style>
+<head>
+    <title>弹幕墙</title>
+</head>
+<body>
+  <canvas id="myCanvas" width="800" height="550" style="border:solid,margin:0px"></canvas>
+  <script type="text/javascript" charset="utf-8">
+    var canvas = document.getElementById("myCanvas");
+    var context = canvas.getContext("2d");
+	var screenWidth = 800;
+	var screenHeight= 550;
+	var staticSec = 10;
+    var background = new Image();
+	background.src = "11.png";
+	var str = ["a","abc","abcde","abfggg","abhhi","abcas","sak","jvf","s","d"];
+	var position = [50, 100, 150, 200, 250, 300, 350, 400, 450, 500];
+	//弹幕
+    var ShowText = function (string, y) {
+        this.string = string;
+		this.beginX = screenWidth;
+        this.endX = 0;
+        this.y = y;
+		this.speed = (16 * this.string.length)/staticSec;
+		this.isReady = true;
+    };
+	//显示弹幕
+    ShowText.prototype.draw = function (context) {
+        context.save();
+        context.font = "16px Arial";
+        context.translate(this.beginX, this.y);
+        context.fillText(this.string, 0, 0);
+        context.restore();
+
+        if (this.beginX >= this.endX 
+			&& this.string != null 
+			&& this.string != ""
+			&& this.isReady) {
+            this.beginX -= this.speed;
+        }else{
+			this.beginX = screenWidth;
+			
+			this.speed = (16 * this.string.length)/staticSec;
+			this.isReady = false;
+		}
+    };
+	ShowText.prototype.reset = function () {
+		this.beginX = screenWidth;
+		this.speed = (16 * this.string.length)/staticSec;
+	}
+	ShowText.prototype.setString = function (string) {
+		this.string = string;
+	}
+	ShowText.prototype.setReady = function (Ready) {
+		this.isReady = Ready;
+	}
+	var messageBox = [new ShowText(str[0], position[0]),
+					  new ShowText(str[1], position[1]),
+					  new ShowText(str[2], position[2]),
+					  new ShowText(str[3], position[3]),
+					  new ShowText(str[4], position[4]),
+					  new ShowText(str[5], position[5]),
+					  new ShowText(str[6], position[6]),
+					  new ShowText(str[7], position[7]),
+					  new ShowText(str[8], position[8]),
+					  new ShowText(str[9], position[9])];
+	//加载
+    background.onload = function () {
+        //动画
+        setInterval(function () {
+			context.clearRect(0, 0, screenWidth, screenHeight);//清除矩形重画
+			context.rect(0, 0,screenWidth,screenHeight);//画
+			for (var i=0; i<messageBox.length; i++) {
+				if (messageBox[i].isReady){
+					messageBox[i].draw(context);
+				}
+			}
+		}, 1000 / 60);
+    };
+	
+	function sendMessage() {
+		var message = document.forms["sendForm"]["fname"].value;
+		if (message == null || message == "") {
+			alert("需要输入");
+			return false;
+		}
+		for (var i=0; i<messageBox.length; i++) {
+			if (!messageBox[i].isReady){
+				messageBox[i].setString(message);
+				messageBox[i].setReady(true);
+				messageBox[i].reset();
+				break;
+			}
+		}
+	}
+	function clearMessage(){
+		for (var i=0; i<messageBox.length; i++) {
+			messageBox[i].setReady(false);
+			messageBox[i].reset();
+		}
+	}
+  </script>
+  <div class="send-and-clear">
+    <form name="sendForm">
+      弹幕：<input type="text" name="fname">
+	  <button type="button" onclick="sendMessage()">发送</button>
+	  <button type="button" onclick="clearMessage()">清除</button>
+    </form>
+  </div>
+</body>
+
+
+<!--
+功能: 实现发射弹幕、清除弹幕、显示弹幕功能。
+
+实现路径: 结构->样式->功能
+
+第一步: 先设计一个简单的弹幕页面，上面有弹幕墙、输入框、按钮，并添加样式。
+
+第二步: 然后给弹幕页面添加功能，能实现发射弹幕、清除弹幕、显示弹幕等功能。
+-->
